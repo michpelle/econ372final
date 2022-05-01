@@ -1,0 +1,184 @@
+---
+title: "Data Summaries"
+author: "Michelle Pan"
+date: "4/30/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+```
+## Description of your selected market and hospitals:
+I decided to investigate the hospital markets in Boston, Massachusetts and Durham, North Carolina. I was born in Brigham and Women’s hospital in Boston and moved from town to town within the greater Boston area throughout my adolescence. Growing up in Boston, a lot of my friends’ parents were doctors and I was used to being in close proximity to many hospitals. When I was around nine years old and living in the suburbs, I was stung by a bee and I told my parents I was having an allergic reaction, but they didn't believe me until thirty minutes after the incident when my lip swelled up to my nose. They then drove me to the nearest hospital which was five minutes away. The emergency room took me in right away because they saw my mouth was swollen. Years later, I spent a lot of time in Brigham and Women’s hospital visiting a family member, and to this day, their cafeteria food is highly ranked in my mind. Based on my past experiences with a handful of hospitals in Boston, I believed the hospitals were high quality, but I was curious about pricing, competition, and how lesser known hospitals in Boston fit into the market.
+
+I have family in Raleigh, North Carolina who I try to see at least twice a year. One of my cousins there goes to Duke University, which is thirty minutes away in Durham, North Carolina. I had heard of Duke University’s cutting edge medical research, so I thought studying the market in which Duke hospitals belong would be interesting.
+
+I selected five hospitals from Boston, Massachusetts: Tufts Medical Center (Tufts Medicine), Boston Medical Center (Boston Medical Center Health System), Brigham Women’s Hospital (Partners HealthCare System, Inc.), Beth Israel Deaconess Center (Beth Israel Lahey Health System), and Carney Hospital (Steward Health Care System, LLC). I also ended up including Massachusetts General Hospital (Partners HealthCare System, Inc.) and New England Baptist Hospital (Beth Israel Lahey Health). Out of these hospitals, Tufts Medical Center, Boston Medical Center, and Carney Hospital were compliant.
+
+I selected five hospitals from Durham, North Carolina: Duke University Hospital (Duke University Health System), Duke Regional Hospital (Duke University Health System), Durham Veterans Affairs Medical Center (Department of Veterans Affairs), North Carolina Specialty Hospital (National Surgical Healthcare), and Select Specialty Hospital-Durham (Select Medical Corporation). Out of these five hospitals, Duke University Hospital, Duke Regional Hospital, and North Carolina Specialty Hospital were compliant (they were also the only ones that CMS had data for). The Center for Medicare and Medicaid Service’s Inpatient Medicare Provider Utilization and Payment Data did not have any data for Durham VA or Durham Specialty Select hospital so I decided to look at Massachusetts General Hospital and New England Baptist Hospital.
+
+The final ten hospitals I looked at were:
+- Tufts Medical Center
+- Boston Medical Center
+- Brigham Women’s Hospital
+- Beth Israel Deaconess Center
+- Carney Hospital
+- Massachusetts General Hospital
+- New England Baptist Hospital
+- Duke University Hospital
+- Duke Regional Hospital
+- North Carolina Select Hospital.
+
+## Hospital prices, charges, and Medicare payments:
+Out of the ten hospitals I selected, the hospitals that were compliant with price transparency by DRG codes were Tufts Medical Center, Boston Medical Center, Duke University Hospital, Duke Regional Hospital, and North Carolina Select Hospital. Massachusetts General Hospital had a file that was too large for my laptop to open, so I marked MGH as non-compliant even though it was possible that they were compliant. Some of these hospitals reported de-identified maximums and minimums and I decided to average the maximum and the minimum for the average negotiated payment. Carney Hospital reported maximums and minimums but all of the minimums were 1250, so I decided to use the maximums as the negotiated payments. Many of the non-compliant hospitals had a data file on their website, but did not report by DRG codes in their data files.
+
+After downloading the CMS data for each hospital, I counted the number of unique hospital names. There was only one DRG code with a count of ten (meaning there was Medicare data for all ten hospitals). Three DRG codes had counts of nine, and 22 had counts of eight. In choosing the five DRG codes to look at, I decided on the one DRG code with a count of ten (which was 470), the three DRG codes with counts of nine (which were 460, 467, and 483), and one DRG code with a count of eight (638). Then, in Excel, I made a spreadsheet of each of the compliant hospitals’ pricing data for gross charges and negotiated payments. Then, for each hospital, I looked at how many DRG codes out of the five I selected CMS had data for and Carney Hospital only had two so I decided to add two more DRG codes to my analysis so that Carney Hospital would have five DRG codes.
+
+The final DRG codes I chose were:
+* 177 - RESPIRATORY INFECTIONS AND INFLAMMATIONS W MCC
+* 193 - SIMPLE PNEUMONIA AND PLEURISY WITH MCC
+* 309 - CARDIAC ARRHYTHMIA AND CONDUCTION DISORDERS WITH CC
+* 460 - SPINAL FUSION EXCEPT CERVICAL WITHOUT MCC
+* 467 - REVISION OF HIP OR KNEE REPLACEMENT WITH CC
+* 470 - MAJOR HIP AND KNEE JOINT REPLACEMENT OR REATTACHMENT OF LOWER EXTREMITY WITHOUT MCC
+* 483 - MAJOR JOINT OR LIMB REATTACHMENT PROCEDURES OF UPPER EXTREMITIES
+* 638 - Diabetes with CC
+
+In Excel, I combined the hospital reported data with the CMS data for each of the eight DRG codes I chose. Seven hospitals had CMS or hospital reported data for five DRG codes (460, 467, 470, 483, and 638). For the seven hospitals that had data for all five DRG codes, I summarized the average gross charge, average negotiated payment, and average Medicare payment for each hospital. I printed a table with the averages as well as compliance for each hospital.
+
+```{r datasets, message=FALSE, echo=FALSE}
+HospitalDRGMedicare <- read_excel("10Hospitals.xlsx")
+```
+
+```{r drg codes in common, message=FALSE, echo=FALSE}
+inCommon <- HospitalDRGMedicare %>% group_by(DRG) %>% summarize(count=n_distinct(hospitalID))
+inCommon10 <- inCommon %>% filter(count==10)
+#inCommon10
+inCommon9 <- inCommon %>% filter(count>=9)
+#inCommon9
+inCommon8 <- inCommon %>% filter(count>=8)
+#inCommon8
+
+#summary(as.factor(Hospital5DRG$hospitalID))
+
+# Carney only has 2, so I am going to include 3 more DRG codes
+# 177 - RESPIRATORY INFECTIONS AND INFLAMMATIONS WITH MCC
+# 193 - SIMPLE PNEUMONIA AND PLEURISY WITH MCC
+# 309 - CARDIAC ARRHYTHMIA AND CONDUCTION DISORDERS WITH CC
+
+Hospital8DRG <- HospitalDRGMedicare %>% filter(DRG==177 | DRG==193 | DRG==309 
+                      | DRG==460 | DRG==467 | DRG==470 | DRG==483 | DRG==638)
+#summary(as.factor(Hospital8DRG$hospitalID))
+```
+
+```{r summary table by hospitals, message=FALSE, echo=FALSE}
+# 5. Summarize data for hospitals
+# can't summarize all 10 hospitals because they don't all have the same
+# DRG codes
+# average DRG codes for DRG Codes 460, 467, 470, 483, 638
+# only hospitals that have all 5 above are Beth Israel, BMC, Brigham,
+# Duke Regional, Duke University, MGH, and Tufts
+
+hospitalAll5 <- Hospital8DRG %>% filter(hospitalID != "Carney" & hospitalID != 
+                                          "NC" & hospitalID != "NEBaptist") %>%
+  filter(DRG==460 | DRG==467 | DRG==470 | DRG==483 | DRG==638)
+
+hospitalTable <- hospitalAll5 %>% group_by(hospitalID) %>% summarize(meanGross =
+        mean(grossCharge,na.rm=TRUE), meanNeg=mean(negotiatedPayment,na.rm=TRUE),
+        meanMed=mean(medicarePayment,na.rm=TRUE)) %>%
+  mutate(compliance=ifelse(meanGross=="NaN","no","yes"))
+print(hospitalTable)
+```
+I created box plots to show the range of gross charges, negotiated payments, and Medicare payments for each DRG.
+```{r summary table by DRG codes, message=FALSE, warning=FALSE, echo=FALSE}
+Hospital8DRG <- HospitalDRGMedicare %>% filter(DRG==177 | DRG==193 | DRG==309 | 
+                          DRG==460 | DRG==467 | DRG==470 | DRG==483 | DRG==638)
+
+HospitalWithoutCompliance <- Hospital8DRG %>% select(hospitalID, DRG, grossCharge,
+                                            medicarePayment, negotiatedPayment)
+hosp8_long <- gather(HospitalWithoutCompliance, paymentType, paymentAmount, 
+                     grossCharge:negotiatedPayment, factor_key=TRUE)%>%
+  mutate(DRGfactor = as.factor(DRG))
+
+ggplot(hosp8_long, aes(x=DRGfactor, y=paymentAmount, fill=paymentType)) + 
+    geom_boxplot() + ylim(c(0,150000)) + 
+  ggtitle("Range of Gross Charges and Payments by DRG Code ") +
+  xlab("DRG Code") + ylab("Amount ($)")
+```
+
+One interesting aspect of my data is that there were very few DRG codes that CMS had data for for all ten hospitals. I thought this may be because different hospitals in a market may specialize in different areas; however in talking to my peers, I realized this may be an interesting aspect of my data because they were able to find five DRG codes that CMS had data for for all ten of their hospitals.
+
+```{r interesting, message=FALSE, warning=FALSE, echo=FALSE}
+ggplot(inCommon, aes(x=DRG,y=count)) + geom_point() + ggtitle("Hospital Counts 
+                                                    for DRG Codes in CMS Data")
+Hospital5DRG <- HospitalDRGMedicare %>% filter(DRG==460 | DRG==467 | DRG==470 |
+                                                 DRG==483 | DRG==638)
+```
+
+## Pricing and competition:
+I calculated market share using CMS data. On the CMS website, I downloaded all the data for every hospital in Boston (which ended up being all of the hospitals I chose because there were no additional hospitals in the Boston market that CMS had data for). I decided to look at the DRG code 470 because it was the only one that I could find in the CMS data for all ten hospitals. I summed the total Medicare discharges for DRG code 470 across every hospital in Boston. Then, I calculated the market share by dividing the number of Medicare discharges in a given hospital by the total number of Medicare discharges in the market. I used the same method for the Durham market.
+I made a scatterplot of market share and negotiated payment. There was a slight positive association between market share and negotiated payment for DRG code 470; however, the association was very weak.
+
+```{r market share, message=FALSE, warning=FALSE, echo=FALSE}
+BostonDRG470 <- read_csv("~/Desktop/ECON372FINAL/BostonDRG470.csv")
+DurhamDRG470 <- read_csv("~/Desktop/ECON372FINAL/DurhamDRG470.csv")
+#Total Medicare discharges in all Boston hospitals in CMS data
+sum(BostonDRG470$Tot_Dschrgs)
+#Total Medicare discharges in all Durham hospitals in CMS data
+sum(DurhamDRG470$Tot_Dschrgs)
+
+only470 <- HospitalDRGMedicare %>% filter(DRG==470) %>%
+  mutate(marketShare=medicareDischarges/medicareMarketDischarges)
+
+# GRAPH FOR 8
+ggplot(only470, aes(x=marketShare,y=negotiatedPayment, color=hospitalID)) +
+  geom_point() + geom_smooth(method=lm, se=FALSE) +
+  ggtitle("Negotiated Payments for DRG Code 470 by Market Shares") +
+  xlab("Market Share") + ylab("Negotiated Payment ($)")
+
+marketShare <- rbind(BostonDRG470,DurhamDRG470)
+bostonShare <- marketShare %>% filter(Rndrng_Prvdr_City=="Boston")
+durhamShare <- marketShare %>% filter(Rndrng_Prvdr_City=="Durham")
+
+# pie charts to add in appendix
+ggplot(bostonShare, aes(x="", y=Tot_Dschrgs, fill=Rndrng_Prvdr_Org_Name)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  ggtitle("Market Shares of Hospitals in Boston for DRG Code 470")
+
+ggplot(durhamShare, aes(x="", y=Tot_Dschrgs, fill=Rndrng_Prvdr_Org_Name)) +
+  geom_bar(stat="identity", width=1) +
+  coord_polar("y", start=0) +
+  theme_void() +
+  ggtitle("Market Shares of Hospitals in Durham for DRG Code 470")
+```
+## Compliance and competition: 
+Compliant hospitals tended to have a larger range of Medicare payments and lower average Medicare payments than non-compliant hospitals. Both compliant and non-compliant hospitals' Medicare payments tended to decrease as market share increased, which was unexpected; however, this was only for one DRG code so the results when looking at more DRG codes is probably different.
+
+```{r compliance, message=FALSE, warning=FALSE, echo=FALSE}
+byCompliance <- HospitalDRGMedicare %>% group_by(compliance,DRG) %>% 
+  summarize(meanMedPay = mean(medicarePayment,na.rm=TRUE))
+
+ggplot(byCompliance, aes(x=DRG,y=meanMedPay,color=compliance)) + geom_point() +
+  ggtitle("Mean Medicare Payment by DRG and Compliance") +
+  xlab("DRG Code") + ylab("Mean Medicare Payment ($)")
+
+hospitalCompliance <- Hospital8DRG %>% mutate(DRGfactor=as.factor(DRG), compliancefactor=as.factor(compliance))
+summary(as.factor(hospitalCompliance$compliance))
+
+ggplot(hospitalCompliance, aes(x=DRGfactor, y=medicarePayment, fill=compliancefactor)) + 
+    geom_boxplot() + ylim(c(0,50000)) + 
+  ggtitle("Range of Medicare Payments by DRG Code and Compliance") +
+  xlab("DRG Code") + ylab("Medicare Payment ($)")
+
+ggplot(only470, aes(x=marketShare,y=medicarePayment,color=compliance)) + geom_line() +
+  ggtitle("Mean Medicare Payment by Market Share") +
+  xlab("Market Share") + ylab("Mean Medicare Payment ($)")
+```
+
+## Summary and conclusions: 
+The price transparency data provided by hospitals is not particularly useful for individuals, but since individuals don’t have a lot of negotiating power against hospitals when it comes to prices, individuals having the information doesn't matter too much. Most individuals probably will not look through the machine readable files, which are often confusing and overwhelming. On the other hand, private insurers and CMS being able to see what other insurers pay hospitals for each DRG code may give them more negotiating power which could lead to lower prices. Overall, I believe the price transparency initiative is a step in the right direction, but there is a lot more reform necessary when it comes to hospital billing.
+
